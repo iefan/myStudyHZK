@@ -1,14 +1,14 @@
 import os
 KEYS = [0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01] #[128, 64, 32, 16, 8, 4, 2, 1]
-HZKFILE = os.path.dirname(os.path.abspath(__file__)) + os.sep + r"font/hzk16v"
+HZKFILE = os.path.dirname(os.path.abspath(__file__)) + os.sep + r"font/hzk16s"
 from PIL import Image, ImageDraw, ImageFont, ImageFilter 
 from random import randint
 
 def gen_dot_character():    
     text = "娜"
-    gb2312 = text.encode('gb2312') #转为二进制, 显示为 b'\xc4\xc8'，参数为 gb2312 gbk是一样
-    result = str(gb2312).replace('\\x', "").replace("b'","").replace("'", "") #将二进制数据清洗成4位字符
-
+    result = text.encode('gb2312').hex() #转为二进制, 显示为 b'\xc4\xc8'，参数为 gb2312 gbk是一样
+    # result = gb2312.hex()
+    
     # 根据编码计算该字在汉字库中的位置
     area = eval('0x' + result[:2]) - 0xA0 #前两位, 区号，从0开始
     index = eval('0x' + result[2:]) - 0xA0 #后两位，位号，从0开始
@@ -50,12 +50,11 @@ def gen_dot_character():
 
 def gen_dot_character_mod(text):    
     # text = "娜"
-    gb2312 = text.encode('gb2312') #转为二进制, 显示为 b'\xc4\xc8'，参数为 gb2312 gbk是一样
-    result = str(gb2312).replace('\\x', "").replace("b'","").replace("'", "") #将二进制数据清洗成4位字符
-
+    result = text.encode('gb2312').hex() #转为十六制, 参数为 gb2312 gbk是一样
     # 根据编码计算该字在汉字库中的位置
-    area = eval('0x' + result[:2]) - 0xA0 #前两位, 区号，从0开始
-    index = eval('0x' + result[2:]) - 0xA0 #后两位，位号，从0开始
+    # area = eval('0x' + result[:2]) - 0xA0 #前两位, 区号，从0开始
+    area = int(result[:2],16) - int("A0", 16)
+    index = int(result[2:],16)- int("A0", 16)
     offset = (94*(area-1) + (index-1)) * 32
 
     # 读取HZK16汉字库文件中该字数据
@@ -95,7 +94,7 @@ def printSeveralHanZi():
     pilex(rect_info_all)
 
 def printSeveralHanZi2():    
-    strHanZi = ["亲爱的娜","天天开心"]
+    strHanZi = ["亲爱的娜","天天开心一"]
     rect_info_all = [""]*16*len(strHanZi)
     indx_jj = 0
     for ihanzi in strHanZi:
@@ -117,24 +116,31 @@ def printSeveralHanZi2():
     pilex(rect_info_all)
 
 def pilex(ceshi_str_lst):
-    width = 850
-    height = 220*2
+    pixOne = 13
+    height = len(ceshi_str_lst)
+    width = len(ceshi_str_lst[0])
+    for item in ceshi_str_lst:
+        # print(len(item), '--')
+        if width < len(item):
+            width = len(item)
+    width = width
+    # print(height, width)
+    width = pixOne * width
+    height = pixOne * height
     image = Image.new('RGB', (width, height), (255,255,255))
     font = ImageFont.truetype('/usr/share/fonts/truetype/wqy/wqy-microhei.ttc', 30)
     # 创建Draw对象:
     draw = ImageDraw.Draw(image)
     
-    # ceshi_str_lst = ['00100100', '10010101']
-
     # 输出文字:
     indx_j = 0
     for item in ceshi_str_lst:
         indx_i = 0        
         for i in item:
             if i=="1":
-                draw.text((13*indx_i, 13*indx_j), "■", font=font, fill=(randint(1,20),randint(1,20),randint(1,20)))
+                draw.text((pixOne*indx_i, pixOne*indx_j), "■", font=font, fill=(randint(1,20),randint(1,20),randint(1,20)))
             else:
-                draw.text((13*indx_i, 13*indx_j), "○", font=font, fill=(150,150,150))
+                draw.text((pixOne*indx_i, pixOne*indx_j), "○", font=font, fill=(150,150,150))
             indx_i += 1
         indx_j += 1
 
@@ -143,7 +149,7 @@ def pilex(ceshi_str_lst):
 
     # 模糊:
     # image = image.filter(ImageFilter.BLUR)
-    image.save('code.png', 'png')
+    image.save(os.path.dirname(os.path.abspath(__file__))+os.sep+'code.png', 'png')
     print("save successful!")
 
 
